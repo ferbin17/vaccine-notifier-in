@@ -6,39 +6,62 @@ require 'date'
 require 'mail'
 require 'yaml'
 require 'logger'
+require_relative 'state'
+require_relative 'district'
 
 class VaccineNotifier
   @@host = "https://cdn-api.co-vin.in/api/v2"
   
-  def initialize(email, state, district, age, pincode = nil, fee_type = nil)
-    @email = email
-    @state = state
-    @district = district
-    @age = age.to_i
-    @pincode = pincode
-    @fee_type = fee_type
+  def check_slots
+    check_for_last_run
+    fetch_receivers
+    group_receivers_and_mail
   end
   
-  def perform
-    check_for_last_run
-    fetch_states
-    fetch_districts
-    fetch_appointments
-    filter_appointments
-    combine_appointment_sessions
-    mail_centre_details unless @appointments.empty?
-    update_notified_list
+  def fetch_receivers
+    receivers_data = YAML.load_file(File.join(File.dirname(__FILE__), '../data/notify.yml'))["receivers"]
+    @receivers = receivers_data.map{|x| x.split(", ")}
+  end
+  
+  def group_receivers_and_mail
+    state_grouped_receivers = @receivers.group_by{|x| x[1]}
+    state_grouped_receivers.each do |key1, value1|
+      @state = key1
+      districts_grouped_receivers = value1.group_by{|x| x[2]}
+      districts_grouped_receivers.each do |key2, value2|
+        @district = key2
+        fetch_states
+        unless @state_record.nil?
+          fetch_districts
+          unless @district_record.nil?
+            fetch_appointments
+            value2.each do |x|
+              @email, @age, @pincode, @fee_type = x[0], x[3].to_i, x[4], x[5]
+              filter_and_mail
+            end
+          end
+        end
+      end
+    end
   end
   
   def fetch_states
-    url = "#{@@host}/admin/location/states"
-    states = get_request(url)["states"]
-    @state_record = states.select{|x| x["state_name"].downcase == @state.downcase}.first
+    if File.exists?(File.join(File.dirname(__FILE__), '../data/states.yml'))
+      states = YAML.load_file(File.join(File.dirname(__FILE__), '../data/states.yml'))["states"]
+    else
+      State.new.fetch_and_save_data
+      fetch_states
+    end
+    @state_record = states.select{|x| x["state_name"].downcase == @state.downcase }.first 
   end
   
   def fetch_districts
-    url = "#{@@host}/admin/location/districts/#{@state_record["state_id"]}"
-    districts = get_request(url)["districts"]
+    if File.exists?(File.join(File.dirname(__FILE__), '../data/districts.yml'))
+      districts = YAML.load_file(File.join(File.dirname(__FILE__), '../data/districts.yml'))["districts"][@state_record["state_id"]]
+    else
+      District.new.fetch_and_save_data
+      fetch_districts
+    end
     @district_record = districts.select{|x| x["district_name"].downcase == @district.downcase}.first
   end
   
@@ -49,6 +72,13 @@ class VaccineNotifier
       url = "#{@@host}/appointment/sessions/public/calendarByDistrict?district_id=#{@district_record["district_id"]}&date=#{date}"
       @appointments += get_request(url)["centers"]
     end
+  end
+  
+  def filter_and_mail
+    filter_appointments
+    combine_appointment_sessions
+    mail_centre_details unless @apps.empty?
+    update_notified_list
   end
   
   private
@@ -67,36 +97,37 @@ class VaccineNotifier
           return response
         end
       rescue Exception => r
+        p r
       end
     end
     
     def filter_appointments
-      filter_by_pincode unless @pincode.nil?
-      filter_by_fee_type unless @fee_type.nil?
       filter_by_availability
       filter_by_age_limit
+      filter_by_pincode unless @pincode.nil?
+      filter_by_fee_type unless @fee_type.nil?
     end
     
     def filter_by_age_limit
-      @appointments = @appointments.select{|x| !x["sessions"].select{|y| y["min_age_limit"] <= @age}.empty?}
+      @apps = @apps.select{|x| !x["sessions"].select{|y| y["min_age_limit"] <= @age}.empty?}
     end
     
     def filter_by_pincode
-      @appointments = @appointments.select{|x| x["pincode"].to_s == @pincode}
+      @apps = @apps.select{|x| x["pincode"].to_s == @pincode}
     end
     
     def filter_by_fee_type
       fee_type_param = (@fee_type == "F" ? "Free" : "Paid")
-      @appointments = @appointments.select{|x| x["fee_type"].to_s == fee_type_param}
+      @apps = @apss.select{|x| x["fee_type"].to_s == fee_type_param}
     end
     
     def filter_by_availability
-      @appointments = @appointments.select{|x| !x["sessions"].select{|y| y["available_capacity"] > 0}.empty?}
+      @apps = @appointments.select{|x| !x["sessions"].select{|y| y["available_capacity"] > 0}.empty?}
     end
     
     def combine_appointment_sessions
       apps = []
-      grouped_appointments = @appointments.group_by{|x| x["center_id"]}
+      grouped_appointments = @apps.group_by{|x| x["center_id"]}
       grouped_appointments.keys.each do |key|
         single_appointment = grouped_appointments[key][0]
         grouped_appointments[key]
@@ -105,7 +136,7 @@ class VaccineNotifier
         end
         apps << single_appointment
       end
-      @appointments = apps
+      @apps = apps
     end
     
     def construct_mail_body
@@ -114,7 +145,7 @@ class VaccineNotifier
       notified = YAML.load_file(File.join(File.dirname(__FILE__), '../data/notified.yml'))||{}
       single_notified = notified[@email]||{}
       current_date_notify = single_notified[(Date.today).strftime("%-d-%-m-%Y")]||[]
-      @appointments.each do |appointment|
+      @apps.each do |appointment|
         next if centre_ids.include?(appointment["center_id"]) || current_date_notify.include?(appointment["center_id"])
         centre_details = "Centre Name: #{appointment["name"]}\nBlock Name: #{appointment["block_name"]}\nPincode: #{appointment["pincode"]}\nFrom(Time): #{appointment["from"]}\nTo(Time): #{appointment["to"]}\nType: #{appointment["fee_type"]}\n"
         slot_details = []
@@ -154,6 +185,7 @@ class VaccineNotifier
             body body
           end
         rescue Exception => r
+          p r
         end
       end
     end
@@ -173,12 +205,12 @@ class VaccineNotifier
     
     def update_notified_list
       notified = YAML.load_file(File.join(File.dirname(__FILE__), '../data/notified.yml'))
-      unless notified.nil?
+      unless notified.nil?  
         single_notified = notified[@email]
         unless single_notified.nil?
           current_date_notify = single_notified[(Date.today).strftime("%-d-%-m-%Y")]
           unless current_date_notify.nil?
-            center_ids = @appointments.collect{|x| x["center_id"]}
+            center_ids = @apps.collect{|x| x["center_id"]}
             outstock = current_date_notify - center_ids
             outstock.each do |x|
               current_date_notify.delete(x)
