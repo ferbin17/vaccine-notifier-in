@@ -1,0 +1,60 @@
+#
+# This file tells systemd how to run Vaccine Notifier as a 24/7 long-running daemon.
+#
+# Customize this file based on your bundler location, app directory, etc.
+# Customize and copy this into /usr/lib/systemd/system (CentOS) or /lib/systemd/system (Ubuntu).
+# Then run:
+#   - systemctl enable vaccine_notifier
+#   - systemctl {start,stop,restart} vaccine_notifier
+#
+# Use `journalctl -u vaccine_notifier -rn 100` to view the last 100 lines of log output.
+#
+[Unit]
+Description=vaccine_notifier
+# start us only once the network and logging subsystems are available,
+# consider adding redis-server.service if Redis is local and systemd-managed.
+After=syslog.target network.target
+
+# See these pages for lots of options:
+#
+#   https://www.freedesktop.org/software/systemd/man/systemd.service.html
+#   https://www.freedesktop.org/software/systemd/man/systemd.exec.html
+#
+# THOSE PAGES ARE CRITICAL FOR ANY LINUX DEVOPS WORK; read them multiple
+# times! systemd is a critical tool for all developers to know and understand.
+#
+[Service]
+#
+#      !!!!  !!!!  !!!!
+#
+Type=forking
+# If your Clockwork process locks up, systemd's watchdog will restart it within seconds.
+WatchdogSec=10
+
+# Environment="RAILS_ENV=production"
+WorkingDirectory=/home/foradian/vaccine/vaccine-notifier
+ExecStart=/home/foradian/.rvm/wrappers/ruby-3.0.0@vaccine/bundle exec clockworkd -c lib/clock.rb start --pid-dir=tmp/pids --log --log-dir=logs
+ExecStop=/home/foradian/.rvm/wrappers/ruby-3.0.0@vaccine/bundle exec clockworkd -c lib/clock.rb stop --pid-dir=tmp/pids --log --log-dir=logs
+
+# !!! Change this to your deploy user account !!!
+User=foradian
+# Group=deploy
+# UMask=0002
+
+# Greatly reduce Ruby memory fragmentation and heap usage
+# https://www.mikeperham.com/2018/04/25/taming-rails-memory-bloat/
+Environment=MALLOC_ARENA_MAX=2
+
+# if we crash, restart
+RestartSec=1
+Restart=on-failure
+
+# output goes to /var/log/syslog (Ubuntu) or /var/log/messages (CentOS)
+StandardOutput=syslog
+StandardError=syslog
+
+# This will default to "bundler" if we don't specify it
+SyslogIdentifier=vaccine_notifier
+
+[Install]
+WantedBy=multi-user.target
