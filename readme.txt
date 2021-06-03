@@ -17,3 +17,13 @@ mount VaccineNotifier::Engine => "/"
   
 yarn add bootstrap@next
 yarn add @popperjs/core
+
+aws:
+   email_configuratons:
+      address: "smtp.gmail.com"
+      port: 587
+      domain: "smtp.gmail.com"
+      username: "example@gmail.com"
+      password: "password"
+      authentication: "plain"
+      enable_starttls_auto: true
