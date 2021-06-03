@@ -1,0 +1,90 @@
+<form class="row g-3 needs-validation">
+  <div class="card">
+    <div class="card-body">
+      <div class="mb-3 row">
+        <label for="inputFullname" class="col-sm-2 col-form-label"><%= t(:full_name) %></label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="inputFullname" required>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <label for="inputEmail" class="col-sm-2 col-form-label"><%= t(:email) %></label>
+        <div class="col-sm-10">
+          <input type="email" class="form-control" id="inputEmail" required>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <label for="inputPassword" class="col-sm-2 col-form-label"><%= t(:phone) %></label>
+        <div class="col-sm-10">
+          <input type="password" class="form-control" id="inputPassword" required>
+        </div>
+      </div>
+      
+      <div class="form-check form-switch age-range">
+        <label for="inputAgeLabel" class="col-sm-2 col-form-label age-label"><%= t(:age) %></label>
+        <div class="col-sm-10">
+          <label class="form-check-label left-checkbox-label" for="inputAge18">18+</label>
+          <input class="form-check-input" type="checkbox" id="inputAge">
+          <label class="form-check-label right-checkbox-label" for="inputAge45">45+</label>
+        </div>
+      </div>
+      
+      <div class="form-check form-switch search-by">
+        <label for="inputSearchByLabel" class="col-sm-2 col-form-label search-by-label"><%= t(:search_by) %></label>
+        <div class="col-sm-10">
+          <label class="form-check-label left-checkbox-label" for="inputSearchByPincode"><%= t(:pincode) %></label>
+          <input class="form-check-input" type="checkbox" id="inputSearchBy">
+          <label class="form-check-label right-checkbox-label" for="inputSearchByDistrict"><%= t(:district) %></label>
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden"><%= t(:loading) %>...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div id="search-by-selector">
+        <div id="search-by-place">
+          <select class="form-select" aria-label="Default select example">
+            <option selected>Open this select menu</option>
+            <option value="1">One</option>
+            <option value="2">Two</option>
+            <option value="3">Three</option>
+          </select>
+          
+          <div id="search-by-district"></div>
+        </div>
+        
+        <div id="search-by-pincode" class="mb-3 row">
+          <label for="inputPassword" class="col-sm-2 col-form-label"><%= t(:pincode) %></label>
+          <div class="col-sm-10">
+            <input type="password" class="form-control" id="inputPassword">
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <label for="inputFeeTypeLabel" class="col-sm-2 col-form-label fee-type-label"><%= t(:fee_type) %></label>
+        <div class="col-sm-10">
+          <div class="form-check form-check-inline fee-type-radio">
+            <input class="form-check-input" type="radio" name="inputFeeType" id="bothRadio" value="" checked="checked">
+            <label class="form-check-label" for="bothRadio"><%= t(:both) %></label>
+          </div>
+          <div class="form-check form-check-inline fee-type-radio">
+            <input class="form-check-input" type="radio" name="inputFeeType" id="freeRadio" value="F">
+            <label class="form-check-label" for="freeRadio"><%= t(:free) %></label>
+          </div>
+          <div class="form-check form-check-inline fee-type-radio">
+            <input class="form-check-input" type="radio" name="inputFeeType" id="paidRadio" value="P">
+            <label class="form-check-label" for="paidRadio"><%= t(:paid) %></label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit"><%= t(:subscribe) %></button>
+      </div>
+    </div>
+  </div>
+</form>
+  

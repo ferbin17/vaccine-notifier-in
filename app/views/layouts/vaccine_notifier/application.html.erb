@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html class="h-100">
+  <head>
+    <title>Vaccine notifier</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "vaccine_notifier/application", media: "all" %>
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+  <body class="d-flex flex-column h-100">
+    <div class="container">
+      <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-center">
+          <div class="container-fluid">
+            <%= link_to t(:vaccine_notifier), subscribe_vaccine_alerts_path, class: "navbar-brand", html: {"aria-current": "page"} %>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <%= link_to t(:subscribe), subscribe_vaccine_alerts_path, class: "nav-link active", html: {"aria-current": "page"} %>
+                </li>
+                <li class="nav-item">
+                  <%= link_to t(:unsubscribe), unsubscribe_vaccine_alerts_path, class: "nav-link" %>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <main class="flex-shrink-0">
+        <div class="container-fluid">
+          <%= yield %>
+        </div>
+      </main>
+      <!-- <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+          <span class="text-muted">Place sticky footer content here.</span>
+        </div>
+      </footer> -->
+    </div>
+  </body>
+</html>

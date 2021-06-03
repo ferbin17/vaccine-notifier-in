@@ -19,4 +19,3 @@ module Clockwork
     File.open(File.join(File.dirname(__FILE__), '../data/time.txt'), "w") { |f| f.write Time.now.to_i }
   }
 end
-

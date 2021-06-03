@@ -1,0 +1,40 @@
+/*
+  Place all the styles related to the matching controller here.
+  They will automatically be included in application.css.
+*/
+
+.age-label, .search-by-label, .fee-type-label{
+  float: left !important;
+  padding-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.search-by, .age-range{
+  padding-left: 0 !important;
+  margin: 1% 0 !important;
+}
+
+.search-by .spinner-border{
+  display: none;
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0 1%;
+}
+
+.left-checkbox-label{
+  float: left !important;
+  margin-right: 5.5% !important;
+}
+
+.right-checkbox-label{
+  margin-left: 1% !important;
+}
+
+#search-by-place{
+  display: none;
+}
+
+.fee-type-radio{
+  width: auto !important;
+}

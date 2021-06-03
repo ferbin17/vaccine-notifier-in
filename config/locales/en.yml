@@ -1,0 +1,28 @@
+en:
+  activerecord:
+    errors:
+      models:
+        vaccine_notifier/user:
+          attributes:
+            base:
+              search_parameters_cant_be_blank: "Search parameters can't be blank"
+              search_either_by_pincode_or_place: "Search either by Pincode or Place"
+              user_already_registered_for_notification: "User already registered for Notification"
+            pincode:
+              invalid_pincode: "Invalid"
+  vaccine_notifier: "Vaccine Notifier"
+  subscribe: "Subscribe"
+  unsubscribe: "Unsubscribe"
+  full_name: "Full Name"
+  email: "Email"
+  phone: "Phone No."
+  age: "Age"
+  search_by: "Search By"
+  pincode: "Pincode"
+  district: "District"
+  fee_type: "Fee Type"
+  both: "Both"
+  free: "Free"
+  paid: "Paid"
+  loading: "Loading"
+  
