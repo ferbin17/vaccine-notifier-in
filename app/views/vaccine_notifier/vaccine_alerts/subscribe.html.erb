@@ -1,90 +1,121 @@
-<form class="row g-3 needs-validation">
+<% p @user.errors.full_messages %>
+<%= form_for :user, class: "row g-3 needs-validation", html: {onsubmit: "validate()"} do |f| %>
   <div class="card">
     <div class="card-body">
       <div class="mb-3 row">
         <label for="inputFullname" class="col-sm-2 col-form-label"><%= t(:full_name) %></label>
         <div class="col-sm-10">
-          <input type="text" class="form-control" id="inputFullname" required>
+          <%= f.text_field :full_name, class: "form-control", id: "inputFullname", :required => true %>
         </div>
       </div>
-      
+
       <div class="mb-3 row">
         <label for="inputEmail" class="col-sm-2 col-form-label"><%= t(:email) %></label>
         <div class="col-sm-10">
-          <input type="email" class="form-control" id="inputEmail" required>
+          <%= f.email_field :email, class: "form-control", id: "inputEmail", :required => true, autocomplete: "off" %>
         </div>
       </div>
-      
+
       <div class="mb-3 row">
         <label for="inputPassword" class="col-sm-2 col-form-label"><%= t(:phone) %></label>
         <div class="col-sm-10">
-          <input type="password" class="form-control" id="inputPassword" required>
+          <%= f.text_field :phone, class: "form-control", id: "inputPhone", :required => true %>
         </div>
       </div>
-      
+
       <div class="form-check form-switch age-range">
         <label for="inputAgeLabel" class="col-sm-2 col-form-label age-label"><%= t(:age) %></label>
         <div class="col-sm-10">
           <label class="form-check-label left-checkbox-label" for="inputAge18">18+</label>
-          <input class="form-check-input" type="checkbox" id="inputAge">
+          <%= f.check_box :age_range, {class: "form-check-input", id: "inputAge"}, "45P", "18P" %>
           <label class="form-check-label right-checkbox-label" for="inputAge45">45+</label>
         </div>
       </div>
-      
+
       <div class="form-check form-switch search-by">
         <label for="inputSearchByLabel" class="col-sm-2 col-form-label search-by-label"><%= t(:search_by) %></label>
         <div class="col-sm-10">
           <label class="form-check-label left-checkbox-label" for="inputSearchByPincode"><%= t(:pincode) %></label>
-          <input class="form-check-input" type="checkbox" id="inputSearchBy">
+          <%= check_box_tag :search_by, :district, false, class: "form-check-input", id: "inputSearchBy" %>
           <label class="form-check-label right-checkbox-label" for="inputSearchByDistrict"><%= t(:district) %></label>
           <div class="spinner-border" role="status">
             <span class="visually-hidden"><%= t(:loading) %>...</span>
           </div>
         </div>
       </div>
-      
+
       <div id="search-by-selector">
-        <div id="search-by-place">
-          <select class="form-select" aria-label="Default select example">
-            <option selected>Open this select menu</option>
-            <option value="1">One</option>
-            <option value="2">Two</option>
-            <option value="3">Three</option>
-          </select>
-          
-          <div id="search-by-district"></div>
+        <div id="search-by-place" class="form-check form-switch input-search">
+          <label for="inputState" class="col-sm-2 col-form-label"><%= t(:state) %></label>
+          <div class="col-sm-10">
+            <%= f.select :state_id, @states, {prompt: t(:select_state), :selected => @user.state_id},
+                class: "form-select", id: "inputState" %>
+          </div>
+
+          <div id="search-by-district" class="form-check form-switch input-search"></div>
         </div>
-        
+
         <div id="search-by-pincode" class="mb-3 row">
           <label for="inputPassword" class="col-sm-2 col-form-label"><%= t(:pincode) %></label>
           <div class="col-sm-10">
-            <input type="password" class="form-control" id="inputPassword">
+            <%= f.text_field :pincode, class: "form-control", id: "inputPincode" %>
           </div>
         </div>
       </div>
-      
+
       <div class="mb-3 row">
         <label for="inputFeeTypeLabel" class="col-sm-2 col-form-label fee-type-label"><%= t(:fee_type) %></label>
         <div class="col-sm-10">
           <div class="form-check form-check-inline fee-type-radio">
-            <input class="form-check-input" type="radio" name="inputFeeType" id="bothRadio" value="" checked="checked">
+            <%= f.radio_button :fee_type, nil, class: "form-check-input", id: "bothRadio" %>
             <label class="form-check-label" for="bothRadio"><%= t(:both) %></label>
           </div>
           <div class="form-check form-check-inline fee-type-radio">
-            <input class="form-check-input" type="radio" name="inputFeeType" id="freeRadio" value="F">
+            <%= f.radio_button :fee_type, "F", class: "form-check-input", id: "freeRadio" %>
             <label class="form-check-label" for="freeRadio"><%= t(:free) %></label>
           </div>
           <div class="form-check form-check-inline fee-type-radio">
-            <input class="form-check-input" type="radio" name="inputFeeType" id="paidRadio" value="P">
+            <%= f.radio_button :fee_type, "P", class: "form-check-input", id: "paidRadio" %>
             <label class="form-check-label" for="paidRadio"><%= t(:paid) %></label>
           </div>
         </div>
       </div>
-      
+
       <div class="col-12">
         <button class="btn btn-primary" type="submit"><%= t(:subscribe) %></button>
       </div>
     </div>
   </div>
-</form>
-  
+<% end %>
+
+<script>
+  $('#inputSearchBy').change(function(){
+    if($(this).prop("checked")){
+      $('#search-by-place').show();
+      $('#search-by-pincode').hide();
+    }else{
+      $('#search-by-place').hide();
+      $('#search-by-pincode').show();
+    }
+  });
+
+  $('#inputState').change(function(){
+    $('.spinner-border').css("display", "inline-block");
+    $.ajax({
+      type: "POST",
+      url: "update_districts",
+      data : {id: $(this).val()},
+      success: function() {
+        $('.spinner-border').hide();
+      },
+      error: function(){
+        window.alert("something wrong!");
+      }
+    });
+  })
+
+  $('form').submit(function(){
+    // write frontend validations here
+    return true;
+  })
+</script>

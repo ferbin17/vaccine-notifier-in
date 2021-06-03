@@ -1,15 +1,15 @@
 module VaccineNotifier
   class AppointmentsFinder
-  
+
     def initialize
       check_for_data
     end
-    
+
     def check_slots
       fetch_appointments_by_pincode
       fetch_appointments_by_place
     end
-    
+
     def fetch_appointments_by_pincode
       receivers = User.where(state: nil, district: nil)
       receivers.each do |receiver|
@@ -19,23 +19,23 @@ module VaccineNotifier
         filter_and_mail
       end
     end
-        
+
 
     def fetch_appointments_by_place
       receivers = User.where(pincode: nil)
       receivers.each do |receiver|
         @receiver = receiver
-        @url = "#{VaccineNotifier::API_HOST}/appointment/sessions/public/calendarByDistrict?district_id=#{receiver.district_id}"
+        @url = "#{VaccineNotifier::API_HOST}/appointment/sessions/public/calendarByDistrict?district_id=#{@receiver.district_id}"
         fetch_appointments
         filter_and_mail
       end
     end
-    
+
     def check_for_data
       State.create_state_records unless State.exists?
-      District.create_state_records unless District.exists?
+      District.create_district_records unless District.exists?
     end
-  
+
     def fetch_appointments
       @appointments = []
       (0..6).each do |n|
@@ -44,13 +44,13 @@ module VaccineNotifier
         @appointments += get_request(url)["centers"]
       end
     end
-  
+
     def filter_and_mail
       filter_appointments
       combine_appointment_sessions
       mail_centre_details unless @apps.empty?
     end
-  
+
     private
       def get_request(url, params = nil)
         begin
@@ -71,31 +71,31 @@ module VaccineNotifier
           return {}
         end
       end
-    
+
       def filter_appointments
         filter_by_availability
         filter_by_age_limit
         filter_by_fee_type unless @receiver.fee_type.nil?
       end
-      
+
       def filter_by_age_limit
         @apps = @apps.select{|x| !x["sessions"].select{|y| y["min_age_limit"] <= @receiver.age.to_i}.empty?}
       end
-      
+
       def filter_by_pincode
         @apps = @apps.select{|x| x["pincode"].to_s == @receiver.pincode}
       end
-      
+
       def filter_by_fee_type
         fee_type_param = (@receiver.fee_type == "F" ? "Free" : "Paid")
         @apps = @apps.select{|x| x["fee_type"].to_s == fee_type_param}
       end
-    
+
       def filter_by_availability
         @apps = @appointments.each{|x| x["sessions"] = x["sessions"].select{|y| y["available_capacity"] > 0}}
         @apps = @apps.select{|x| !x["sessions"].empty?}
       end
-      
+
       def combine_appointment_sessions
         apps = []
         grouped_appointments = @apps.group_by{|x| x["center_id"]}
@@ -109,7 +109,7 @@ module VaccineNotifier
         end
         @apps = apps
       end
-    
+
       def mail_body
         body = ""
         centre_ids = []
@@ -133,15 +133,15 @@ module VaccineNotifier
         alert_record.update(notified_appointment_ids: (current_date_notify & @apps.collect{|x| x["center_id"]}))
         body
       end
-    
+
       def mail_centre_details
         body = mail_body
         NotificationMailer.with(receiver: @receiver, body: body).mail_alert.deliver_now if body != ""
       end
-    
+
       def update_notified_list
         notified = YAML.load_file(File.join(File.dirname(__FILE__), '../data/notified.yml'))
-        unless notified.nil?  
+        unless notified.nil?
           single_notified = notified[@email]
           unless single_notified.nil?
             current_date_notify = single_notified[(Date.today).strftime("%-d-%-m-%Y")]
@@ -158,6 +158,6 @@ module VaccineNotifier
           end
         end
       end
-      
+
   end
 end

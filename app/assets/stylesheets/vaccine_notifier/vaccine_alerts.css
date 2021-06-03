@@ -10,7 +10,7 @@
   padding-bottom: 0 !important;
 }
 
-.search-by, .age-range{
+.search-by, .age-range, .input-search{
   padding-left: 0 !important;
   margin: 1% 0 !important;
 }
@@ -33,6 +33,10 @@
 
 #search-by-place{
   display: none;
+}
+
+.input-search .col-sm-10{
+  float: right;
 }
 
 .fee-type-radio{

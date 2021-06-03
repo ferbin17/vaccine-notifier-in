@@ -5,8 +5,9 @@ VaccineNotifier::Engine.routes.draw do
       post 'subscribe'
       get 'unsubscribe'
       post 'unsubscribe'
+      post 'update_districts'
     end
   end
-  
+
   root to: "vaccine_alerts#subscribe"
 end

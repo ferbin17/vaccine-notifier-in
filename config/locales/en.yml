@@ -25,4 +25,5 @@ en:
   free: "Free"
   paid: "Paid"
   loading: "Loading"
-  
+  select_state: "Select State"
+  select_district: "Select District"
